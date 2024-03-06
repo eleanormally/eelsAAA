@@ -31,6 +31,11 @@ func main() {
 	http.HandleFunc("/post", func(w http.ResponseWriter, r *http.Request) {
 		handleResult(r, db)
 	})
+
+	http.HandleFunc("/data", func(w http.ResponseWriter, r *http.Request) {
+		showData(w, r, db)
+	})
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"

@@ -58,6 +58,7 @@ func testPage(w http.ResponseWriter, r *http.Request, db *pgxpool.Pool) {
 		log.Print(err.Error())
 		return
 	}
+	defer value.Close()
 	for value.Next() {
 		var newWordPair components.WordPair
 		value.Scan(&newWordPair.Word, &newWordPair.NonWord, &newWordPair.Id)

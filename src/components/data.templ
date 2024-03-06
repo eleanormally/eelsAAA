@@ -1,0 +1,84 @@
+package components
+
+import "fmt"
+
+script percDeadVisualizer(dead int, total int) {
+  const svg = d3.select("#pdv").select("svg")
+    let width = svg.attr("width"),
+        height = svg.attr("height"),
+        radius = Math.min(width, height) / 2,
+        g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+
+  const pie = d3.pie()
+  pie.padAngle(0.03)
+
+  const arc = d3.arc().innerRadius(radius * 0.8).outerRadius(radius)
+
+var color = d3.scaleOrdinal(['#4daf4a','#377eb8','#ff7f00','#984ea3','#e41a1c']);
+
+  const arcs = g.selectAll("arc")
+    .data(pie([dead, total-dead]))
+    .enter()
+    .append("g")
+    .attr("inactive", "active")
+
+  arcs.append("path")
+    .attr("fill", function(d, i) {
+      return color(i)
+      })
+    .attr("d", arc)
+
+  arcs.append("text")
+    .attr("transform", function(d){
+        let pos = arc.centroid(d);
+        let midangle = d.startAngle + (d.endAngle - d.startAngle) / 2
+        pos[0] = radius * 0.4 * (midangle < Math.PI ? 1 : -1);
+        return 'translate(' + pos + ')';
+    })
+    .attr("text-anchor", "middle")
+    .text( function(d, i) {
+      return [dead + " inactive", (total-dead) + " active"][i]}
+    );
+
+
+
+
+
+
+
+}
+
+templ Data(resCount int, users int, deads int, complete int) {
+	<html>
+		<head>
+			<title>eels AAA data</title>
+			<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+			<script src="https://cdn.tailwindcss.com"></script>
+			<script src="https://code.jquery.com/jquery-3.7.1.slim.min.js" integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
+		</head>
+		<body class="bg-gray-100">
+			<div class="flex">
+				<div id="pdv" class="rounded-2xl shadow-md m-2 w-min h-min p-3 bg-white">
+					<span class="text-xl text-center font-bold">Users</span>
+					<svg width="300" height="300"></svg>
+				</div>
+				@percDeadVisualizer(deads, users)
+				<div>
+					<div id="responses" class="rounded-2xl shadow-md m-2 p-3 bg-white">
+						<span class="text-xl text-center font-bold justify-left">Responses</span>
+						<div class="flex items-center flex-col">
+							<span class="text-xl">
+								<b>{ fmt.Sprint(resCount) }</b> responses
+								<br/>
+								from <b>{ fmt.Sprint(users-deads) }</b> users.
+								<br/>
+								<br/>
+								{ fmt.Sprint(complete) } users finished the test.
+							</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</body>
+	</html>
+}

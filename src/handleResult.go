@@ -38,9 +38,11 @@ func handleResult(r *http.Request, db *pgxpool.Pool) {
 		fmt.Println("invalid id")
 	}
 
-	_, err = db.Query(context.Background(), "INSERT INTO results (\"user\", correct, time, pair_id) VALUES ($1, $2, $3, $4)", intId, value.Correct, value.Time, value.Id)
+	res, err := db.Query(context.Background(), "INSERT INTO results (\"user\", correct, time, pair_id) VALUES ($1, $2, $3, $4)", intId, value.Correct, value.Time, value.Id)
+
 	if err != nil {
 		fmt.Println("Error Setting DB Result: " + err.Error())
 	}
+	defer res.Close()
 
 }
