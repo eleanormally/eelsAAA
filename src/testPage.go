@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"eelsAAA/components"
+	"log"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -14,7 +15,7 @@ func testPage(w http.ResponseWriter, r *http.Request, db *pgxpool.Pool) {
 	var id string
 	err := db.QueryRow(context.Background(), "insert into users (name) values ($1) returning id", "test").Scan(&id)
 	if err != nil {
-		return
+		log.Print(err.Error())
 	}
 	w.Header().Add("set-cookie", "eelsAAAId="+string(id)+"; secure;")
 
@@ -53,7 +54,7 @@ func testPage(w http.ResponseWriter, r *http.Request, db *pgxpool.Pool) {
 	}
 	value, err := db.Query(context.Background(), "SELECT word, nonword, id FROM \"wordPairs\" ORDER BY RANDOM() LIMIT 50")
 	if err != nil || value.Next() == false {
-		return
+		log.Print(err.Error())
 	}
 	for value.Next() {
 		var newWordPair components.WordPair
