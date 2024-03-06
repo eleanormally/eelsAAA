@@ -16,8 +16,9 @@ func testPage(w http.ResponseWriter, r *http.Request, db *pgxpool.Pool) {
 	err := db.QueryRow(context.Background(), "insert into users (name) values ($1) returning id", "test").Scan(&id)
 	if err != nil {
 		log.Print(err.Error())
+		return
 	}
-	w.Header().Add("set-cookie", "eelsAAAId="+string(id)+"; secure;")
+	w.Header().Add("set-cookie", "eelsAAAId="+string(id)+";")
 
 	// getting word list
 	base := []components.WordPair{
@@ -53,8 +54,9 @@ func testPage(w http.ResponseWriter, r *http.Request, db *pgxpool.Pool) {
 		},
 	}
 	value, err := db.Query(context.Background(), "SELECT word, nonword, id FROM \"wordPairs\" ORDER BY RANDOM() LIMIT 50")
-	if err != nil || value.Next() == false {
+	if err != nil {
 		log.Print(err.Error())
+		return
 	}
 	for value.Next() {
 		var newWordPair components.WordPair
