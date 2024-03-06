@@ -18,8 +18,8 @@ type WordPair struct {
 
 func runner(pairs []WordPair) templ.ComponentScript {
 	return templ.ComponentScript{
-		Name: `__templ_runner_79a0`,
-		Function: `function __templ_runner_79a0(pairs){let ct = new Date()
+		Name: `__templ_runner_87ca`,
+		Function: `function __templ_runner_87ca(pairs){let ct = new Date()
       let index = -1
       const array = pairs
       function keyDown(event) {
@@ -28,13 +28,13 @@ func runner(pairs []WordPair) templ.ComponentScript {
         }
         if(index == -1) {
           $("#testerPane").html(` + "`" + `
-            <div class="flex justify-center w-full">
-             <span id="word1" class="bg-blue-600 rounded-lg text-white m-5 p-2 font-bold shadow-lg text-center w-40 py-5">
+            <div class="flex justify-center items-center w-full flex-col">
+             <span id="word1" class="bg-blue-600 rounded-lg text-white m-5 p-2 font-bold shadow-lg text-center w-40 py-5"></span>
+             <div class="flex justify-center mt-12">
+                <span class="bg-blue-800 rounded-lg text-white p-2 shadow-lg text-center mx-5">Word</span>
+                <span class="bg-blue-800 rounded-lg text-white p-2 shadow-lg text-center mx-5">Nonword</span>
+             </div>
               
-             </span>
-             <span id="word2" class="bg-blue-600 rounded-lg text-white m-5 p-2 font-bold shadow-lg text-center w-40 py-5">
-              
-             </span>
            </div>
           ` + "`" + `)
           iterate()
@@ -66,12 +66,10 @@ func runner(pairs []WordPair) templ.ComponentScript {
         if(index < array.length) {
           if(Math.random() < 0.5) {
             $("#word1").text(array[index].word)
-            $("#word2").text(array[index].nonWord)
           }
           else {
 
             $("#word1").text(array[index].nonWord)
-            $("#word2").text(array[index].word)
           }
 
           ct = new Date()
@@ -81,8 +79,8 @@ func runner(pairs []WordPair) templ.ComponentScript {
       }
       window.addEventListener("keydown", keyDown)
 }`,
-		Call:       templ.SafeScript(`__templ_runner_79a0`, pairs),
-		CallInline: templ.SafeScriptInline(`__templ_runner_79a0`, pairs),
+		Call:       templ.SafeScript(`__templ_runner_87ca`, pairs),
+		CallInline: templ.SafeScriptInline(`__templ_runner_87ca`, pairs),
 	}
 }
 
@@ -99,7 +97,7 @@ func Tester(givenId string, pairs []WordPair) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<html><head><title>eelsAAA</title><script src=\"https://cdn.tailwindcss.com\"></script><script src=\"https://code.jquery.com/jquery-3.7.1.slim.min.js\" integrity=\"sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=\" crossorigin=\"anonymous\"></script></head><body><div class=\"flex justify-center items-center flex-col w-full h-full\" id=\"testerPane\"><p class=\"text-center\">You will now be shown a series of words, one on the left and one on the right.<br>Place your fingers on the f and j keys on the keyboard. One of the words will be a real word, and one will not.<br>If the correct word is on the left, press the f key. If the correct word is on the right, press the j key. <br>The first few pairs are practice, and will not be scored.<br>Press f or j to begin.</p></div>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<html><head><title>eelsAAA</title><script src=\"https://cdn.tailwindcss.com\"></script><script src=\"https://code.jquery.com/jquery-3.7.1.slim.min.js\" integrity=\"sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=\" crossorigin=\"anonymous\"></script></head><body><div class=\"flex justify-center items-center flex-col w-full h-full\" id=\"testerPane\"><p class=\"text-center\">You will now be shown a series of words.<br>Place your fingers on the f and j keys on the keyboard. <br>If the word is a real word, press the f key. If the word is not a real word, press the j key. <br>The first few words are practice, and will not be scored.<br>Press f or j to begin.</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

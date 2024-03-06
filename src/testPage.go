@@ -53,7 +53,14 @@ func testPage(w http.ResponseWriter, r *http.Request, db *pgxpool.Pool) {
 			Id:      -1,
 		},
 	}
-	value, err := db.Query(context.Background(), "SELECT word, nonword, id FROM \"wordPairs\" ORDER BY RANDOM() LIMIT 50")
+	value, err := db.Query(context.Background(), `SELECT * FROM ((SELECT word, nonword, id FROM "wordPairs" WHERE aoa = 'early' and freq = 'high' LIMIT 8)
+UNION
+(SELECT word, nonword, id FROM "wordPairs" WHERE aoa = 'early' and freq = 'low' LIMIT 8)
+UNION
+(SELECT word, nonword, id FROM "wordPairs" WHERE aoa = 'late' and freq = 'high' LIMIT 8)
+UNION
+(SELECT word, nonword, id FROM "wordPairs" WHERE aoa = 'late' and freq = 'low' LIMIT 8)
+) as r ORDER BY RANDOM()`)
 	if err != nil {
 		log.Print(err.Error())
 		return
