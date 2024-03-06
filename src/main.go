@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"eelsAAA/components"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -31,6 +32,8 @@ func main() {
 	http.HandleFunc("/post", func(w http.ResponseWriter, r *http.Request) {
 		handleResult(r, db)
 	})
-	_ = http.ListenAndServe(":8080", nil)
+	port := flag.Int("port", 80, "specify a port")
+	flag.Parse()
+	_ = http.ListenAndServe(":"+fmt.Sprint(*port), nil)
 
 }
