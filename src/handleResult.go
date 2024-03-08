@@ -15,6 +15,7 @@ type Response struct {
 	Correct bool `json:"correct"`
 	Id      int  `json:"id"`
 	Time    int  `json:"time"`
+	Word    bool `json:"word"`
 }
 
 func handleResult(r *http.Request, db *pgxpool.Pool) {
@@ -38,7 +39,14 @@ func handleResult(r *http.Request, db *pgxpool.Pool) {
 		fmt.Println("invalid id")
 	}
 
-	res, err := db.Query(context.Background(), "INSERT INTO results (\"user\", correct, time, pair_id) VALUES ($1, $2, $3, $4)", intId, value.Correct, value.Time, value.Id)
+	res, err := db.Query(context.Background(),
+		`INSERT INTO results ("user", correct, time, pair_id, word) VALUES ($1, $2, $3, $4, $5)`,
+		intId,
+		value.Correct,
+		value.Time,
+		value.Id,
+		value.Word,
+	)
 
 	if err != nil {
 		fmt.Println("Error Setting DB Result: " + err.Error())

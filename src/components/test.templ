@@ -43,7 +43,8 @@ script runner(pairs []WordPair) {
           body: JSON.stringify({
             id: array[index].id,
             correct: correct,
-            time: (new Date())-ct
+            time: (new Date())-ct,
+            word: array[index].choice == 1
             })
           })
         iterate()
