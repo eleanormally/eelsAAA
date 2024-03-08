@@ -4,6 +4,7 @@ type WordPair struct {
 	Word    string `json:"word"`
 	NonWord string `json:"nonWord"`
 	Id      int    `json:"id"`
+	Choice  int    `json:"choice"`
 }
 
 script runner(pairs []WordPair) {
@@ -52,7 +53,7 @@ script runner(pairs []WordPair) {
       function iterate() {
         index++
         if(index < array.length) {
-          if(Math.random() < 0.5) {
+          if(array[index].choice == 1) {
             $("#word1").text(array[index].word)
           }
           else {

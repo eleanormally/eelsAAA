@@ -14,12 +14,13 @@ type WordPair struct {
 	Word    string `json:"word"`
 	NonWord string `json:"nonWord"`
 	Id      int    `json:"id"`
+	Choice  int    `json:"choice"`
 }
 
 func runner(pairs []WordPair) templ.ComponentScript {
 	return templ.ComponentScript{
-		Name: `__templ_runner_87ca`,
-		Function: `function __templ_runner_87ca(pairs){let ct = new Date()
+		Name: `__templ_runner_5f3b`,
+		Function: `function __templ_runner_5f3b(pairs){let ct = new Date()
       let index = -1
       const array = pairs
       function keyDown(event) {
@@ -64,7 +65,7 @@ func runner(pairs []WordPair) templ.ComponentScript {
       function iterate() {
         index++
         if(index < array.length) {
-          if(Math.random() < 0.5) {
+          if(array[index].choice == 1) {
             $("#word1").text(array[index].word)
           }
           else {
@@ -79,8 +80,8 @@ func runner(pairs []WordPair) templ.ComponentScript {
       }
       window.addEventListener("keydown", keyDown)
 }`,
-		Call:       templ.SafeScript(`__templ_runner_87ca`, pairs),
-		CallInline: templ.SafeScriptInline(`__templ_runner_87ca`, pairs),
+		Call:       templ.SafeScript(`__templ_runner_5f3b`, pairs),
+		CallInline: templ.SafeScriptInline(`__templ_runner_5f3b`, pairs),
 	}
 }
 
