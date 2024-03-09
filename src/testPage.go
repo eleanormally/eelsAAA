@@ -89,5 +89,5 @@ func testPage(w http.ResponseWriter, r *http.Request, db *pgxpool.Pool) {
 		base = append(base, newWordPair)
 	}
 
-	components.Tester(id, base).Render(context.Background(), w)
+	components.Tester(id, base, (rand.Int()%2 == 1)).Render(context.Background(), w)
 }

@@ -23,22 +23,22 @@ func Base(showTest bool) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 1)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<html><head><title>eelsAAA</title><script src=\"https://cdn.tailwindcss.com\"></script><script src=\"https://code.jquery.com/jquery-3.7.1.slim.min.js\" integrity=\"sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=\" crossorigin=\"anonymous\"></script></head><body><div class=\"flex flex-col items-center justify-center w-full h-full\"><span class=\"text-3xl text-center font-bold text-blue\">Welcome to EELS AAA!!!!</span> <span class=\"text-lg text-center\">Eleanor's English Lexico Semantic and Age of Acquisition Analysis</span><p>Please only take the test once. Data will be available once all of it has been collected.</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if showTest {
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 2)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<a href=\"/test\"><button class=\"bg-blue-600 text-white font-bold text-2xl p-5 rounded-xl transition-all hover:bg-blue-700 m-5\">Start Test</button></a>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 3)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<button class=\"bg-gray-600 text-white font-bold text-2xl p-5 rounded-xl m-5\" disabled>Test Complete</button>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 4)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

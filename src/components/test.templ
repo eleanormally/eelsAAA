@@ -7,7 +7,7 @@ type WordPair struct {
 	Choice  int    `json:"choice"`
 }
 
-script runner(pairs []WordPair) {
+script runner(pairs []WordPair, flip bool) {
       let ct = new Date()
       let index = -1
       const array = pairs
@@ -20,10 +20,9 @@ script runner(pairs []WordPair) {
             <div class="flex justify-center items-center w-full flex-col">
              <span id="word1" class="bg-blue-600 rounded-lg text-white m-5 p-2 font-bold shadow-lg text-center w-40 py-5"></span>
              <div class="flex justify-center mt-12">
-                <span class="bg-blue-800 rounded-lg text-white p-2 shadow-lg text-center mx-5">Word</span>
-                <span class="bg-blue-800 rounded-lg text-white p-2 shadow-lg text-center mx-5">Nonword</span>
+               <span class="bg-blue-800 rounded-lg text-white p-2 shadow-lg text-center mx-5">${flip ? "word" : "non word"}</span>
+               <span class="bg-blue-800 rounded-lg text-white p-2 shadow-lg text-center mx-5">${flip ? "non word" : "word"}</span>
              </div>
-              
            </div>
           `)
           iterate()
@@ -35,7 +34,7 @@ script runner(pairs []WordPair) {
         }
 
         let correct = false
-        if((event.key == 'f') == (array[index].word == $("#word1").text())) {
+        if((event.key == (flip ? 'f' : 'j')) == (array[index].word == $("#word1").text())) {
           correct = true
         }
         fetch("/post", {
@@ -68,9 +67,17 @@ script runner(pairs []WordPair) {
         }
       }
       window.addEventListener("keydown", keyDown)
+
 }
 
-templ Tester(givenId string, pairs []WordPair) {
+func decide(flip bool, a string, b string) string {
+	if flip {
+		return a
+	}
+	return b
+}
+
+templ Tester(givenId string, pairs []WordPair, flip bool) {
 	<html>
 		<head>
 			<title>eelsAAA</title>
@@ -84,14 +91,17 @@ templ Tester(givenId string, pairs []WordPair) {
 					<br/>
 					Place your fingers on the f and j keys on the keyboard. 
 					<br/>
-					If the word is a real word, press the f key. If the word is not a real word, press the j key. 
+					If the word is a real word, press the { decide(flip, "f", "j") } key. If the word is not a real word, press the { decide(flip, "j", "f") } key. 
 					<br/>
 					The first few words are practice, and will not be scored.
 					<br/>
 					Press f or j to begin.
 				</p>
 			</div>
-			@runner(pairs)
+			@runner(
+				pairs,
+				flip,
+			)
 		</body>
 	</html>
 }

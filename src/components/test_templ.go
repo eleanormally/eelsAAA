@@ -17,10 +17,10 @@ type WordPair struct {
 	Choice  int    `json:"choice"`
 }
 
-func runner(pairs []WordPair) templ.ComponentScript {
+func runner(pairs []WordPair, flip bool) templ.ComponentScript {
 	return templ.ComponentScript{
-		Name: `__templ_runner_5426`,
-		Function: `function __templ_runner_5426(pairs){let ct = new Date()
+		Name: `__templ_runner_1b47`,
+		Function: `function __templ_runner_1b47(pairs, flip){let ct = new Date()
       let index = -1
       const array = pairs
       function keyDown(event) {
@@ -32,10 +32,9 @@ func runner(pairs []WordPair) templ.ComponentScript {
             <div class="flex justify-center items-center w-full flex-col">
              <span id="word1" class="bg-blue-600 rounded-lg text-white m-5 p-2 font-bold shadow-lg text-center w-40 py-5"></span>
              <div class="flex justify-center mt-12">
-                <span class="bg-blue-800 rounded-lg text-white p-2 shadow-lg text-center mx-5">Word</span>
-                <span class="bg-blue-800 rounded-lg text-white p-2 shadow-lg text-center mx-5">Nonword</span>
+               <span class="bg-blue-800 rounded-lg text-white p-2 shadow-lg text-center mx-5">${flip ? "word" : "non word"}</span>
+               <span class="bg-blue-800 rounded-lg text-white p-2 shadow-lg text-center mx-5">${flip ? "non word" : "word"}</span>
              </div>
-              
            </div>
           ` + "`" + `)
           iterate()
@@ -47,7 +46,7 @@ func runner(pairs []WordPair) templ.ComponentScript {
         }
 
         let correct = false
-        if((event.key == 'f') == (array[index].word == $("#word1").text())) {
+        if((event.key == (flip ? 'f' : 'j')) == (array[index].word == $("#word1").text())) {
           correct = true
         }
         fetch("/post", {
@@ -80,13 +79,21 @@ func runner(pairs []WordPair) templ.ComponentScript {
         }
       }
       window.addEventListener("keydown", keyDown)
+
 }`,
-		Call:       templ.SafeScript(`__templ_runner_5426`, pairs),
-		CallInline: templ.SafeScriptInline(`__templ_runner_5426`, pairs),
+		Call:       templ.SafeScript(`__templ_runner_1b47`, pairs, flip),
+		CallInline: templ.SafeScriptInline(`__templ_runner_1b47`, pairs, flip),
 	}
 }
 
-func Tester(givenId string, pairs []WordPair) templ.Component {
+func decide(flip bool, a string, b string) string {
+	if flip {
+		return a
+	}
+	return b
+}
+
+func Tester(givenId string, pairs []WordPair, flip bool) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
@@ -99,15 +106,44 @@ func Tester(givenId string, pairs []WordPair) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 1)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<html><head><title>eelsAAA</title><script src=\"https://cdn.tailwindcss.com\"></script><script src=\"https://code.jquery.com/jquery-3.7.1.slim.min.js\" integrity=\"sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=\" crossorigin=\"anonymous\"></script></head><body><div class=\"flex justify-center items-center flex-col w-full h-full\" id=\"testerPane\"><p class=\"text-center\">You will now be shown a series of words.<br>Place your fingers on the f and j keys on the keyboard. <br>If the word is a real word, press the ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = runner(pairs).Render(ctx, templ_7745c5c3_Buffer)
+		var templ_7745c5c3_Var2 string
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(decide(flip, "f", "j"))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/test.templ`, Line: 93, Col: 67}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 2)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" key. If the word is not a real word, press the ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var3 string
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(decide(flip, "j", "f"))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/test.templ`, Line: 93, Col: 141}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" key. <br>The first few words are practice, and will not be scored.<br>Press f or j to begin.</p></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = runner(
+			pairs,
+			flip,
+		).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
