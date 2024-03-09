@@ -21,7 +21,7 @@ func userData(db *pgxpool.Pool) (int, int, int, error) {
 		return 0, 0, 0, err
 	}
 	var complete int
-	err = db.QueryRow(context.Background(), "SELECT count(*) from (SELECT count(*) from results group by user) as r where r.count >= 64").Scan(&complete)
+	err = db.QueryRow(context.Background(), "select count(*) from (select count(*) from results as r group by r.user) where count >= 64").Scan(&complete)
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -48,7 +48,10 @@ func showData(w http.ResponseWriter, r *http.Request, db *pgxpool.Pool) {
 
 	var entries []components.Entry
 	values, err := db.Query(context.Background(),
-		`SELECT wp.word, r.time, wp.freq, wp.aoa from results as r inner join "wordPairs" as wp on wp.id = r.pair_id where r.correct = true and r.word = true`,
+		`SELECT wp.word, avg(r.time) as time, wp.freq, wp.aoa from results as r 
+		inner join 
+		"wordPairs" as wp on wp.id = r.pair_id where r.correct = true and r.word = true
+		group by wp.word, wp.aoa, wp.freq`,
 	)
 	defer values.Close()
 	if err != nil {
@@ -64,7 +67,11 @@ func showData(w http.ResponseWriter, r *http.Request, db *pgxpool.Pool) {
 
 	var incorrects []components.Entry
 	values, err = db.Query(context.Background(),
-		`SELECT wp.nonword, r.time, wp.freq, wp.aoa from results as r inner join "wordPairs" as wp on wp.id = r.pair_id where r.correct = true and r.word = false`,
+		`SELECT wp.nonword, avg(r.time) as time, wp.freq, wp.aoa from results as r 
+		inner join 
+		"wordPairs" as wp on wp.id = r.pair_id where r.correct = true and r.word = false
+		group by wp.nonword, wp.aoa, wp.freq	
+		`,
 	)
 	defer values.Close()
 	if err != nil {
@@ -84,7 +91,7 @@ func showData(w http.ResponseWriter, r *http.Request, db *pgxpool.Pool) {
 		inactiveUsers,
 		complete,
 		components.EntryVisualizer(incorrects, "Non Word Results", 400),
-		components.EntryVisualizer(entries, "Correct Results", 400),
+		components.EntryVisualizer(entries, "Word Results", 400),
 	).Render(context.Background(), w)
 
 }

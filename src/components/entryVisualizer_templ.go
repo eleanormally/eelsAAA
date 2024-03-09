@@ -16,16 +16,16 @@ import (
 )
 
 type Entry struct {
-	Word string `json:"word"`
-	Time int    `json:"time"`
-	Freq string `json:"freq"`
-	Aoa  string `json:"aoa"`
+	Word string  `json:"word"`
+	Time float32 `json:"time"`
+	Freq string  `json:"freq"`
+	Aoa  string  `json:"aoa"`
 }
 
 func listEntries(entries []Entry, id string) templ.ComponentScript {
 	return templ.ComponentScript{
-		Name: `__templ_listEntries_6137`,
-		Function: `function __templ_listEntries_6137(entries, id){const svg = d3.select("#"+id).select("svg")
+		Name: `__templ_listEntries_91fe`,
+		Function: `function __templ_listEntries_91fe(entries, id){const svg = d3.select("#"+id).select("svg")
   let g = svg.append("g")
 
   const margin = 25
@@ -39,30 +39,62 @@ func listEntries(entries []Entry, id string) templ.ComponentScript {
     .range([margin, height-margin])
     .padding(.2)
 
-  const x = d3.scaleLinear().domain([0, maxVal]).range([margin,width-margin])
+  const x = d3.scaleLinear().domain([-maxVal, maxVal]).range([margin,width-margin])
   
   g.selectAll().data(entries)
      .join("rect")
         .attr("y", (d) => y(d.word))
-        .attr("x", (d) => x(maxVal)-x(d.time)+x(0) )
         .attr("height", y.bandwidth())
-        .attr("width", (d) => x(d.time))
+        .attr("width", (d) => x(d.time)-x(0))
         .append("svg:title").text((d) => d.word)
   g.selectAll("text").data(entries).enter()
       .append("text")
         .text((d) => d.time)
-        .attr("x", (d) => x(maxVal)-x(d.time)+x(0)+10)
-        .attr("y", (d) => y(d.word)+(y.bandwidth()/2)+5)
-        .style("text-anchor", "start")
+        .attr("y", (d) => y(d.word)+y.bandwidth()-1)
         .style("fill", "white")
+        .style("font-size", y.bandwidth()+"px")
 
   const update = () => {
     if(d3.select("#" + id + "aoa").property("checked")) {
-    g.selectAll("rect").data(entries)
-    .attr("fill", (d) => d3.hsl(180, 0.75, d.aoa === "early" ? 0.6 : 0.4).formatHex())
+      g.selectAll("rect").data(entries)
+      .attr("fill", (d) => d3.hsl(180, 0.75, d.aoa === "early" ? 0.6 : 0.4).formatHex())
+      .attr("x", (d) => {
+        if(d.aoa === "early") {
+          return x(-d.time)
+        } else {
+          return x(0)
+        }
+      })
+      g.selectAll("text").data(entries)
+        .attr("x", (d) => {
+          if(d.aoa === "early") {
+            return x(-d.time)+10
+          }
+          else {
+            return x(d.time)-10
+          }
+          })
+        .style("text-anchor", (d) => d.aoa === "early" ? "start" : "end")
     } else {
-    g.selectAll("rect").data(entries)
-    .attr("fill", (d) => d3.hsl(20, 0.75, d.freq === "high" ? 0.6 : 0.4).formatHex())
+      g.selectAll("rect").data(entries)
+      .attr("fill", (d) => d3.hsl(20, 0.75, d.freq === "high" ? 0.6 : 0.4).formatHex())
+      .attr("x", (d) => {
+        if(d.freq === "low") {
+          return x(-d.time)
+        } else {
+          return x(0)
+        }
+      })
+      g.selectAll("text").data(entries)
+        .attr("x", (d) => {
+          if(d.freq === "low") {
+            return x(-d.time)+10
+          }
+          else {
+            return x(d.time)-10
+          }
+          })
+        .style("text-anchor", (d) => d.freq === "low" ? "start" : "end")
     }
   }
 
@@ -74,8 +106,8 @@ func listEntries(entries []Entry, id string) templ.ComponentScript {
 
 
 }`,
-		Call:       templ.SafeScript(`__templ_listEntries_6137`, entries, id),
-		CallInline: templ.SafeScriptInline(`__templ_listEntries_6137`, entries, id),
+		Call:       templ.SafeScript(`__templ_listEntries_91fe`, entries, id),
+		CallInline: templ.SafeScriptInline(`__templ_listEntries_91fe`, entries, id),
 	}
 }
 
@@ -111,7 +143,7 @@ func EntryVisualizer(entries []Entry, title string, width int) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entryVisualizer.templ`, Line: 71, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/entryVisualizer.templ`, Line: 103, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
