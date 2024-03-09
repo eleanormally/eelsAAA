@@ -48,7 +48,7 @@ var color = d3.scaleOrdinal(['#4daf4a','#377eb8','#ff7f00','#984ea3','#e41a1c'])
 
 }
 
-templ Data(resCount int, users int, deads int, complete int) {
+templ Data(resCount int, users int, deads int, complete int, incorrects templ.Component, allEntries templ.Component) {
 	<html>
 		<head>
 			<title>eels AAA data</title>
@@ -57,27 +57,31 @@ templ Data(resCount int, users int, deads int, complete int) {
 			<script src="https://code.jquery.com/jquery-3.7.1.slim.min.js" integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
 		</head>
 		<body class="bg-gray-100">
-			<div class="flex">
-				<div id="pdv" class="rounded-2xl shadow-md m-2 w-min h-min p-3 bg-white">
-					<span class="text-xl text-center font-bold">Users</span>
-					<svg width="300" height="300"></svg>
-				</div>
-				@percDeadVisualizer(deads, users)
-				<div>
-					<div id="responses" class="rounded-2xl shadow-md m-2 p-3 bg-white">
-						<span class="text-xl text-center font-bold justify-left">Responses</span>
-						<div class="flex items-center flex-col">
-							<span class="text-xl">
-								<b>{ fmt.Sprint(resCount) }</b> responses
-								<br/>
-								from <b>{ fmt.Sprint(users-deads) }</b> users.
-								<br/>
-								<br/>
-								{ fmt.Sprint(complete) } users finished the test.
-							</span>
+			<div class="flex justify-between">
+				<div class="flex">
+					<div id="pdv" class="rounded-2xl shadow-md m-2 w-min h-min p-3 bg-white">
+						<span class="text-xl text-center font-bold">Users</span>
+						<svg width="300" height="300"></svg>
+					</div>
+					@percDeadVisualizer(deads, users)
+					<div>
+						<div id="responses" class="rounded-2xl shadow-md m-2 p-3 bg-white">
+							<span class="text-xl text-center font-bold justify-left">Responses</span>
+							<div class="flex items-center flex-col">
+								<span class="text-xl">
+									<b>{ fmt.Sprint(resCount) }</b> responses
+									<br/>
+									from <b>{ fmt.Sprint(users-deads) }</b> users.
+									<br/>
+									<br/>
+									{ fmt.Sprint(complete) } users finished the test.
+								</span>
+							</div>
 						</div>
 					</div>
 				</div>
+				@incorrects
+				@allEntries
 			</div>
 		</body>
 	</html>

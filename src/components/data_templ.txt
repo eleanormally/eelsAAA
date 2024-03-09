@@ -1,0 +1,6 @@
+<html><head><title>eels AAA data</title><script src=\"https://cdn.jsdelivr.net/npm/d3@7\"></script><script src=\"https://cdn.tailwindcss.com\"></script><script src=\"https://code.jquery.com/jquery-3.7.1.slim.min.js\" integrity=\"sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=\" crossorigin=\"anonymous\"></script></head><body class=\"bg-gray-100\"><div class=\"flex justify-between\"><div class=\"flex\"><div id=\"pdv\" class=\"rounded-2xl shadow-md m-2 w-min h-min p-3 bg-white\"><span class=\"text-xl text-center font-bold\">Users</span> <svg width=\"300\" height=\"300\"></svg></div>
+<div><div id=\"responses\" class=\"rounded-2xl shadow-md m-2 p-3 bg-white\"><span class=\"text-xl text-center font-bold justify-left\">Responses</span><div class=\"flex items-center flex-col\"><span class=\"text-xl\"><b>
+</b> responses<br>from <b>
+</b> users.<br><br>
+ users finished the test.</span></div></div></div></div>
+</div></body></html>

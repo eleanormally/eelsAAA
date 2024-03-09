@@ -1,0 +1,80 @@
+package components 
+
+import (
+	"strings"
+	"fmt"
+)
+
+type Entry struct {
+	Word string `json:"word"`
+	Time int    `json:"time"`
+	Freq string `json:"freq"`
+	Aoa  string `json:"aoa"`
+}
+
+script listEntries(entries []Entry, id string) {
+  const svg = d3.select("#"+id).select("svg")
+  let g = svg.append("g")
+
+  const margin = 25
+  const width = svg.attr("width")
+  const height = svg.attr("height")
+
+  const maxVal = d3.max(entries, (d) => d.time)
+
+  const y = d3.scaleBand()
+    .domain(d3.groupSort(entries, ([d]) => -d.time, (d) => d.word))
+    .range([margin, height-margin])
+    .padding(.2)
+
+  const x = d3.scaleLinear().domain([0, maxVal]).range([margin,width-margin])
+  
+  g.selectAll().data(entries)
+     .join("rect")
+        .attr("y", (d) => y(d.word))
+        .attr("x", (d) => x(maxVal)-x(d.time)+x(0) )
+        .attr("height", y.bandwidth())
+        .attr("width", (d) => x(d.time))
+        .append("svg:title").text((d) => d.word)
+  g.selectAll("text").data(entries).enter()
+      .append("text")
+        .text((d) => d.time)
+        .attr("x", (d) => x(maxVal)-x(d.time)+x(0)+10)
+        .attr("y", (d) => y(d.word)+(y.bandwidth()/2)+5)
+        .style("text-anchor", "start")
+        .style("fill", "white")
+
+  const update = () => {
+    if(d3.select("#" + id + "aoa").property("checked")) {
+    g.selectAll("rect").data(entries)
+    .attr("fill", (d) => d3.hsl(180, 0.75, d.aoa === "early" ? 0.6 : 0.4).formatHex())
+    } else {
+    g.selectAll("rect").data(entries)
+    .attr("fill", (d) => d3.hsl(20, 0.75, d.freq === "high" ? 0.6 : 0.4).formatHex())
+    }
+  }
+
+
+  d3.select("#" + id + "aoa").on("change", update  )
+  update()
+
+
+
+
+}
+
+func titlize(title string) string {
+	return strings.Join((strings.Split(title, " ")), "_") + "_listdiv"
+}
+
+templ EntryVisualizer(entries []Entry, title string, width int) {
+	<div id={ titlize(title) } class="rounded-2xl shadow-md m-2 p-3 bg-white flex flex-col">
+		<span class="text-xl font-bold w-full text-right ">{ title }</span>
+		<div class="flex justify-end w-full">
+			<label for={ titlize(title) + "aoa" } class="font-bold mr-2">Distinguish AoA</label>
+			<input type="checkbox" id={ titlize(title) + "aoa" }/>
+		</div>
+		<svg width={ fmt.Sprint(width) } height="700"></svg>
+		@listEntries(entries, titlize(title))
+	</div>
+}
