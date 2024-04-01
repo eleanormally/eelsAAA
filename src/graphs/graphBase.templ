@@ -1,0 +1,17 @@
+package graphs
+
+templ graphBase(title string, caption string, graph templ.Component) {
+	<div class="rounded-2xl shadow-md p-3 bg-white h-min">
+		if title != "" {
+			<span class="text-xl text-center font-bold">{ title }</span>
+		}
+		@graph
+		if caption != "" {
+			<span class="text-caption">{ caption }</span>
+		}
+	</div>
+}
+
+templ svgComponent(viewbox string, id string) {
+	<svg viewBox={ viewbox } id={ id }></svg>
+}

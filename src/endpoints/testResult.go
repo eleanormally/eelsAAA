@@ -1,4 +1,4 @@
-package main
+package endpoints
 
 import (
 	"context"
@@ -11,21 +11,21 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Response struct {
+type response struct {
 	Correct bool `json:"correct"`
 	Id      int  `json:"id"`
 	Time    int  `json:"time"`
 	Word    bool `json:"word"`
 }
 
-func handleResult(r *http.Request, db *pgxpool.Pool) {
+func EnterTestResult(r *http.Request, db *pgxpool.Pool) {
 	//body response
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		fmt.Println("error reading body")
 		return
 	}
-	var value Response
+	var value response
 	err = json.Unmarshal(body, &value)
 
 	//checking for valid cookie id

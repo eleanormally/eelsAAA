@@ -1,0 +1,48 @@
+package graphs
+
+script generate(total int, inactive int, id string) {
+
+  const svg = d3.select("#"+id)
+    let width = 300,
+        height = 300,
+        radius = Math.min(width, height) / 2,
+        g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+
+  const pie = d3.pie()
+  pie.padAngle(0.03)
+
+  const arc = d3.arc().innerRadius(radius * 0.8).outerRadius(radius)
+
+var color = d3.scaleOrdinal(['#4daf4a','#377eb8','#ff7f00','#984ea3','#e41a1c']);
+
+  const arcs = g.selectAll("arc")
+    .data(pie([inactive, total-inactive]))
+    .enter()
+    .append("g")
+    .attr("inactive", "active")
+
+  arcs.append("path")
+    .attr("fill", function(d, i) {
+      return color(i)
+      })
+    .attr("d", arc)
+
+  arcs.append("text")
+    .attr("transform", function(d){
+        let pos = arc.centroid(d);
+        let midangle = d.startAngle + (d.endAngle - d.startAngle) / 2
+        pos[0] = radius * 0.4 * (midangle < Math.PI ? 1 : -1);
+        return 'translate(' + pos + ')';
+    })
+    .attr("text-anchor", "middle")
+    .text( function(d, i) {
+      return [inactive + " inactive", (total-inactive) + " active"][i]}
+    );
+
+
+}
+
+templ InactiveUsersPie(totalUsers int, inactiveUsers int) {
+	@graphBase("Users", "", svgComponent("0 0 300 300", "users"))
+	@generate(totalUsers, inactiveUsers, "users")
+}

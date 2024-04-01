@@ -2,7 +2,8 @@ package main
 
 import (
 	"context"
-	"eelsAAA/components"
+	"eelsAAA/endpoints"
+	"eelsAAA/views"
 	"fmt"
 	"net/http"
 	"os"
@@ -20,20 +21,30 @@ func main() {
 	defer db.Close()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := r.Cookie("eelsAAAId")
-		showTest := err != nil
-		components.Base(showTest).Render(context.Background(), w)
+		views.Homepage(w)
 	})
 
 	http.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
-		testPage(w, r, db)
+		views.TestPage(w, r, db)
 	})
+
+	http.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
+		views.UserInfo(w, db)
+	})
+
 	http.HandleFunc("/post", func(w http.ResponseWriter, r *http.Request) {
-		handleResult(r, db)
+		endpoints.EnterTestResult(r, db)
+	})
+
+	http.HandleFunc("/postUser", func(w http.ResponseWriter, r *http.Request) {
+		endpoints.EnterUserData(w, r, db)
 	})
 
 	http.HandleFunc("/data", func(w http.ResponseWriter, r *http.Request) {
-		showData(w, r, db)
+		views.Admin(w, db)
+	})
+	http.HandleFunc("/writeup", func(w http.ResponseWriter, r *http.Request) {
+		views.Writeup(w)
 	})
 
 	port := os.Getenv("PORT")

@@ -1,0 +1,77 @@
+package views
+
+import (
+	"github.com/jackc/pgx/v5/pgxpool"
+	"eelsAAA/graphs"
+	"net/http"
+	"fmt"
+)
+
+type UserData struct {
+	Users         int
+	InactiveUsers int
+	CompleteUsers int
+	TestCount     int
+}
+
+func userData(db *pgxpool.Pool) (*UserData, error) {
+	var totalUsers int
+	var inactiveUsers int
+	err := db.QueryRow(context.Background(), "SELECT count(*) from users").Scan(&totalUsers)
+	if err != nil {
+		return nil, err
+	}
+	err = db.QueryRow(context.Background(), "SELECT count(*) from users as u WHERE NOT EXISTS (select * from results as r where r.user = u.id ) ").Scan(&inactiveUsers)
+	if err != nil {
+		return nil, err
+	}
+	var complete int
+	err = db.QueryRow(context.Background(), "select count(*) from (select count(*) from results as r group by r.user) where count >= 64").Scan(&complete)
+	if err != nil {
+		return nil, err
+	}
+
+	var testCount int
+	err = db.QueryRow(context.Background(), "select count(*) from results").Scan(&testCount)
+	if err != nil {
+		return nil, err
+	}
+
+	return &UserData{
+		Users:         totalUsers,
+		InactiveUsers: inactiveUsers,
+		CompleteUsers: complete,
+		TestCount:     testCount,
+	}, nil
+}
+
+func Admin(w http.ResponseWriter, db *pgxpool.Pool) {
+	d, err := userData(db)
+	if err != nil {
+		fmt.Println("data error: " + err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	adminView(d, db).Render(context.Background(), w)
+}
+
+templ adminView(d *UserData, db *pgxpool.Pool) {
+	<html>
+		<head>
+			<title>eels AAA data</title>
+			<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+			<script src="https://cdn.tailwindcss.com"></script>
+			<script src="https://code.jquery.com/jquery-3.7.1.slim.min.js" integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
+		</head>
+		<body class="bg-gray-100">
+			<div class="grid grid-cols-3 w-full p-3 gap-4 w-full">
+				<div class="grid grid-cols-subgrid col-span-2">
+					@graphs.InactiveUsersPie(d.Users, d.InactiveUsers)
+					@graphs.NetTests(d.TestCount, d.Users, d.InactiveUsers, d.CompleteUsers)
+				</div>
+				@graphs.BifurcatedFrequencyHistogram(db)
+			</div>
+		</body>
+	</html>
+}

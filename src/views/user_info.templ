@@ -1,0 +1,50 @@
+package views
+
+import (
+	"net/http"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+func UserInfo(w http.ResponseWriter, db *pgxpool.Pool) {
+	var id string
+	err := db.QueryRow(context.Background(), "insert into users (name) values ($1) returning id", "test").Scan(&id)
+	if err != nil {
+		return
+	}
+	w.Header().Add("set-cookie", "eelsAAAId="+string(id)+";")
+
+	infoPage(id).Render(context.Background(), w)
+}
+
+templ infoPage(id string) {
+	<html>
+		<head>
+			<title>eelsAAA</title>
+			<script src="https://cdn.tailwindcss.com"></script>
+		</head>
+		<body>
+			<div class="flex justify-center items-center flex-col w-full h-full">
+				<form class="flex flex-col justify-center" action="/postUser">
+					<input type="hidden" value={ id } id="id" name="id"/>
+					<div class="flex m-5">
+						<div class="flex flex-col mx-1">
+							<label for="name" class="text-right py-1">Name: </label>
+							<label for="age" class="text-right mb-1">Age: </label>
+							<label for="l1" class="text-right pt-1">First Language: </label>
+						</div>
+						<div class="flex flex-col mx-1">
+							<input type="text" id="name" name="name" class="border-2 rounded-lg border-gray-600 mb-1"/>
+							<input type="number" id="age" name="age" class="border-2 rounded-lg border-gray-600 mb-1"/>
+							<input type="text" id="l1" name="l1" class="border-2 rounded-lg border-gray-600"/>
+						</div>
+					</div>
+					<button
+						input
+						type="submit"
+						class="bg-blue-600 text-white font-bold text-xl shadow-md rounded-lg p-5"
+					>Submit</button>
+				</form>
+			</div>
+		</body>
+	</html>
+}

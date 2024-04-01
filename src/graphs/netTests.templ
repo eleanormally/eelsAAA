@@ -1,0 +1,22 @@
+package graphs
+
+import (
+	"fmt"
+)
+
+templ NetTests(resCount int, users int, inactiveUsers int, complete int) {
+	@graphBase("Responses", "", description(resCount, users, inactiveUsers, complete))
+}
+
+templ description(resCount int, users int, inactiveUsers int, complete int) {
+	<div class="flex items-center flex-col">
+		<span class="text-xl">
+			<b>{ fmt.Sprint(resCount) }</b> responses
+			<br/>
+			from <b>{ fmt.Sprint(users-inactiveUsers) }</b> users.
+			<br/>
+			<br/>
+			{ fmt.Sprint(complete) } users finished the test.
+		</span>
+	</div>
+}
