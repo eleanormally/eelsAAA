@@ -21,12 +21,12 @@ func userData(db *pgxpool.Pool) (*UserData, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = db.QueryRow(context.Background(), "SELECT count(*) from users as u WHERE NOT EXISTS (select * from results as r where r.user = u.id ) ").Scan(&inactiveUsers)
+	err = db.QueryRow(context.Background(), "SELECT count(*) from users as u WHERE NOT EXISTS (select * from results as r where r.user = u.id)").Scan(&inactiveUsers)
 	if err != nil {
 		return nil, err
 	}
 	var complete int
-	err = db.QueryRow(context.Background(), "select count(*) from (select count(*) from results as r group by r.user) where count >= 64").Scan(&complete)
+	err = db.QueryRow(context.Background(), "select count(*) from (select count(*) from results as r group by r.user) as s where count >= 64").Scan(&complete)
 	if err != nil {
 		return nil, err
 	}

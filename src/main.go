@@ -14,6 +14,7 @@ import (
 func main() {
 
 	db, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
+
 	if err != nil {
 		fmt.Println("cannot connect to DB")
 		os.Exit(1)
@@ -44,7 +45,10 @@ func main() {
 		views.Admin(w, db)
 	})
 	http.HandleFunc("/writeup", func(w http.ResponseWriter, r *http.Request) {
-		views.Writeup(w)
+		views.Writeup(w, db)
+	})
+	http.HandleFunc("/play", func(w http.ResponseWriter, r *http.Request) {
+		views.Playground(w, db)
 	})
 
 	port := os.Getenv("PORT")

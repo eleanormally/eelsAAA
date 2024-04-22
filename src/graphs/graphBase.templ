@@ -1,13 +1,20 @@
 package graphs
 
+type GraphError struct {
+}
+
+func (e *GraphError) Error() string {
+	return "Error Generating Graph"
+}
+
 templ graphBase(title string, caption string, graph templ.Component) {
-	<div class="rounded-2xl shadow-md p-3 bg-white h-min">
+	<div class="rounded-2xl drop-shadow-md border-2 border-grey p-3 bg-white h-min w-full flex flex-col">
 		if title != "" {
-			<span class="text-xl text-center font-bold">{ title }</span>
+			<span class="text-lg text-center">{ title }</span>
 		}
 		@graph
 		if caption != "" {
-			<span class="text-caption">{ caption }</span>
+			<span class="text-sm text-center">{ caption }</span>
 		}
 	</div>
 }

@@ -1,0 +1,9 @@
+<div class=\"rounded-2xl drop-shadow-md border-2 border-grey p-3 bg-white h-min w-full flex flex-col\">
+<span class=\"text-lg text-center\">
+</span>
+<span class=\"text-sm text-center\">
+</span>
+</div>
+<svg viewBox=\"
+\" id=\"
+\"></svg>

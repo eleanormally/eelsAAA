@@ -1,0 +1,286 @@
+package graphs
+
+import (
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+templ ResponseTimeBox(db *pgxpool.Pool) {
+	<div id="fig4">
+		@graphBase(
+			"Figure 4",
+			"Blue box surrounds the center 2 quartiles. Whiskers surround the 5th and 9th percentiles. All data the falls outside of this is plotted",
+			displayResponseTimeBox(getResponseTimeData(db)),
+		)
+	</div>
+}
+
+type response struct {
+	Time int
+	Word string
+}
+
+type responseEntryData struct {
+	Times          []response
+	SecondQuartile int
+	ThirdQuartile  int
+	Median         float64
+	Mean           float64
+	FifthPc        float64
+	NineFifthPc    float64
+	StdDev         float64
+}
+
+type responseTimeData struct {
+	WordTimes    responseEntryData
+	NonWordTimes responseEntryData
+}
+
+func getResponseTimeData(db *pgxpool.Pool) (*responseTimeData, error) {
+	var d responseTimeData
+	err := db.QueryRow(context.Background(),
+		`select 
+	min(CASE WHEN quartile = 2 and word = true then time end) as wq2, 
+	max(CASE WHEN quartile = 3 and word = true then time end) as wq3,
+  min(CASE WHEN quartile = 2 and word = false then time end) as nwq2,
+  max(CASE WHEN quartile = 3 and word = false then time end) as nwq3,
+  min(CASE WHEN percentile >= 0.05 and word = true then time end) as wp5,
+  max(CASE WHEN percentile <= 0.95 and word = true then time end) as wp95,
+  min(CASE WHEN percentile >= 0.05 and word = false then time end) as nwp5,
+  max(CASE WHEN percentile <= 0.95 and word = false then time end) as nwp95,
+  avg(CASE WHEN word = true then time end) wmean,
+  percentile_cont(0.5) within group (order by time) filter(WHERE word = true) as wmed,
+  avg(CASE WHEN word = false then time end) nwmean,
+  percentile_cont(0.5) within group (order by time) filter(WHERE word = false) as nwmed,
+  stddev(CASE WHEN word = true then time end) wstd,
+  stddev(CASE WHEN word = false then time end) nstd
+from (select
+	r.time,
+  ntile(4) over (partition by r.word order by r.time) as quartile,
+  PERCENT_RANK() over (partition by r.word order by r.time) as percentile,
+ 	r.word
+
+from results as r
+order by time
+) as s`).Scan(
+		&d.WordTimes.SecondQuartile,
+		&d.WordTimes.ThirdQuartile,
+		&d.NonWordTimes.SecondQuartile,
+		&d.NonWordTimes.ThirdQuartile,
+		&d.WordTimes.FifthPc,
+		&d.WordTimes.NineFifthPc,
+		&d.NonWordTimes.FifthPc,
+		&d.NonWordTimes.NineFifthPc,
+		&d.WordTimes.Mean,
+		&d.WordTimes.Median,
+		&d.NonWordTimes.Mean,
+		&d.NonWordTimes.Median,
+		&d.WordTimes.StdDev,
+		&d.NonWordTimes.StdDev,
+	)
+	if err != nil {
+		return nil, err
+	}
+	val, err := db.Query(context.Background(),
+		`
+    select 
+      r.time, 
+      r.word, 
+      wp.word 
+    from results as r join "wordPairs" as wp on r.pair_id = wp.id 
+    where r.word = true and 
+          (r.time < $1
+            or
+           r.time > $2
+          )
+    union all
+    select r.time,
+           r.word, 
+           wp.nonword as word 
+    from results as r join "wordPairs" as wp on r.pair_id = wp.id 
+    where r.word = false and 
+          (r.time < $3
+           or
+           r.time > $4
+           )
+    `,
+		d.WordTimes.FifthPc,
+		d.WordTimes.NineFifthPc,
+		d.NonWordTimes.FifthPc,
+		d.NonWordTimes.NineFifthPc,
+	)
+	defer val.Close()
+	if err != nil {
+		return nil, err
+	}
+	for val.Next() {
+		var time int
+		var isWord bool
+		var word string
+		val.Scan(&time, &isWord, &word)
+		if isWord {
+			d.WordTimes.Times = append(d.WordTimes.Times, response{Time: time, Word: word})
+		} else {
+			d.NonWordTimes.Times = append(d.NonWordTimes.Times, response{Time: time, Word: word})
+		}
+	}
+	return &d, nil
+}
+
+script renderResponseTimeBox(d *responseTimeData) {
+  let svg = d3.select("#response-time-box"),
+    margin = 200,
+    height = 1200-margin,
+    width = 800-margin
+
+  let xScale = d3.scaleBand().range([0, width]).padding(0.4),
+      yScale = d3.scaleLinear().range([height, 0])
+
+  let g = svg.append("g")
+            .attr("transform", "translate(100, 100)")
+
+  let tt = d3.select("body")
+        .append("div")
+  tt.attr("id", "timett")
+    .attr("class", "drop-shadow-md text-sm rounded-md p-1 border-1 border-grey bg-white flex flex-col")
+    .style("position", "absolute")
+    .style("visibility", "hidden")
+  svg.on('mousemove', function(event) {
+      tt.style("left", event.pageX - 10)
+         .style("top", event.pageY + 10)
+    });
+
+  let outlierData = [...d.WordTimes.Times.map(d => ["Word", d]), ...d.NonWordTimes.Times.map(d => ["Nonword", d])]
+
+  // generate scale
+  xScale.domain(["Word", "Nonword"])
+
+  const outlierVals = outlierData.flat().filter(d => typeof d != "string").map(d => d.Time)
+  const outlierMax = Math.max(...outlierVals)
+
+  yScale.domain([0, Math.ceil(outlierMax/1000)*1000])
+  g.append("g")
+    .attr("transform", "translate(0,"+height+")")
+    .call(d3.axisBottom(xScale))
+  g.append("g")
+    .call(d3.axisLeft(yScale).tickFormat(d => d).ticks(20))
+
+  const data = [["Word", d.WordTimes], ["Nonword", d.NonWordTimes]]
+
+  //apply median box
+  g.selectAll(".bar").data(data).enter()
+    .append("rect")
+    .attr("class", "bar")
+    .attr("x", d => xScale(d[0]))
+    .attr("y", d => yScale(d[1].ThirdQuartile))
+    .attr("width", xScale.bandwidth())
+    .attr("height", d => yScale(d[1].SecondQuartile)-yScale(d[1].ThirdQuartile))
+    .on("mouseover", function(event, d) {
+      d3.select(this).transition().duration(100).style("opacity", 0.85)
+      tt.html(`
+        <div class="flex justify-between">
+          <span class="mr-1">Mean:</span><span>${d[1].Mean.toFixed(1)}ms</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="mr-1">Median:</span><span>${d[1].Median.toFixed(1)}ms</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="mr-1">Std Dev:</span><span>${d[1].StdDev.toFixed(1)}ms</span>
+        </div>
+        <div class="flex justify-between overflow-visible">
+          <span class="mr-1">Center Quartiles:</span><span>${d[1].SecondQuartile.toFixed(0)}-${d[1].ThirdQuartile.toFixed(0)}ms</span>
+        </div>
+        <div class="flex justify-between overflow-visible">
+          <span class="mr-1">5-95 Percentiles:</span><span>${d[1].FifthPc.toFixed(0)}-${d[1].NineFifthPc.toFixed(0)}ms</span>
+        </div>
+      `)
+      tt.style("visibility", "visible")
+    })
+    .on("mouseout", function(event, d) {
+      d3.select(this).transition().duration(100).style("opacity", 1)
+      tt.style("visibility", "hidden")
+    })
+  //apply error bars
+  let lines = g.append("g").style("pointer-events", "none").selectAll("line.err").data(data)
+  lines.enter()
+    .append("line")
+    .attr("class", "err")
+    .attr('x1', d => xScale(d[0])+(xScale.bandwidth()/2))
+    .attr('x2', d => xScale(d[0])+(xScale.bandwidth()/2))
+    .attr('y1', d => yScale(d[1].FifthPc))
+    .attr('y2', d => yScale(d[1].NineFifthPc))
+    .style('stroke-width', xScale.bandwidth()/50)
+
+  lines.enter()
+    .append("line")
+    .attr("class", "err")
+    .attr('x1', d => xScale(d[0])+(xScale.bandwidth()/2)-(xScale.bandwidth()/10))
+    .attr('x2', d => xScale(d[0])+(xScale.bandwidth()/2)+(xScale.bandwidth()/10))
+    .attr('y1', d => yScale(d[1].FifthPc))
+    .attr('y2', d => yScale(d[1].FifthPc))
+  lines.enter()
+    .append("line")
+    .attr("class", "err")
+    .attr('x1', d => xScale(d[0])+(xScale.bandwidth()/2)-(xScale.bandwidth()/10))
+    .attr('x2', d => xScale(d[0])+(xScale.bandwidth()/2)+(xScale.bandwidth()/10))
+    .attr('y1', d => yScale(d[1].NineFifthPc))
+    .attr('y2', d => yScale(d[1].NineFifthPc))
+  //apply median bar
+  lines.enter()
+    .append("line")
+    .attr("class", "err")
+    .attr('x1', d => xScale(d[0]))
+    .attr('x2', d => xScale(d[0])+xScale.bandwidth())
+    .attr('y1', d => yScale(d[1].Median))
+    .attr('y2', d => yScale(d[1].Median))
+  //apply mean cross
+  g.selectAll('.cross').data(data).enter()
+    .append("path")
+    .style("pointer-events", "none")
+    .attr("class", "cross")
+    .attr("d", d3.symbol(d3.symbolTimes).size(200))
+    .style("stroke", "black")
+    .style("stroke-width", "1")
+    .attr('transform', d => (
+      `translate(${xScale(d[0])+(xScale.bandwidth()/2)},${yScale(d[1].Mean)})`
+    ))
+
+
+  //display outliers
+  let outliers = g.append("g").selectAll(".outlier").data(outlierData)
+  outliers.enter()
+    .append("circle")
+    .attr("class", "outlier")
+    .attr("cx", d=> xScale(d[0])+(xScale.bandwidth()/2))
+    .attr("cy", d=> yScale(d[1].Time))
+    .attr("r", 5)
+    .attr("id", d => d[1].Time + d[1].Word)
+    .attr("fill", "orange")
+    .on("mouseover", function(event, d) {
+      d3.select(this).raise()
+      d3.select(this).transition().duration(50).attr("r", 10).attr("fill", "#3366ff")
+
+      tt.html(`
+        <div class="flex justify-between">
+          <span class="mr-1">Time:</span><span>${d[1].Time}ms</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="mr-1">${d[0]}:</span><span>${d[1].Word}</span>
+        </div>
+      `)
+      tt.style("visibility", "visible")
+    })
+    .on("mouseout", function(event, d) {
+      d3.select(this).transition().duration(50).attr("r", 5).attr("fill", "orange")
+      tt.style("visibility", "hidden")
+    })
+
+}
+
+templ displayResponseTimeBox(d *responseTimeData, err error) {
+	if err != nil {
+		<span>Error generating graph { err.Error() }</span>
+	} else {
+		@svgComponent("0 0 800 1200", "response-time-box")
+		@renderResponseTimeBox(d)
+	}
+}

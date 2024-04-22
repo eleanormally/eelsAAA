@@ -1,0 +1,4 @@
+<div class=\"flex items-center flex-col\"><span class=\"text-xl\"><b>
+</b> responses<br>from <b>
+</b> users.<br><br>
+ users finished the test.</span></div>

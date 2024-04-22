@@ -17,8 +17,8 @@ script listEntries(entries []entry, id string) {
   let g = svg.append("g")
 
   const margin = 25
-  const width = 400
-  const height = 700
+  const width = 800
+  const height = 1200
 
   const maxVal = d3.max(entries, (d) => d.time)
 
@@ -28,19 +28,42 @@ script listEntries(entries []entry, id string) {
     .padding(.2)
 
   const x = d3.scaleLinear().domain([-maxVal, maxVal]).range([margin,width-margin])
+
+
+  let tt = d3.select("body")
+        .append("div")
+  tt.attr("id", "timett")
+    .attr("class", "drop-shadow-md text-sm rounded-md p-1 border-1 border-grey bg-white flex flex-col")
+    .style("position", "absolute")
+    .style("visibility", "hidden")
+  svg.on('mousemove', function(event) {
+      tt.style("left", event.pageX - 10)
+         .style("top", event.pageY + 10)
+    });
   
   g.selectAll().data(entries)
      .join("rect")
         .attr("y", (d) => y(d.word))
         .attr("height", y.bandwidth())
         .attr("width", (d) => x(d.time)-x(0))
-        .append("svg:title").text((d) => d.word)
+        .on("mouseover", function(event, d) {
+            d3.select(this).transition().duration(100).style("opacity", 0.85)
+            tt.html(`
+              <span>${d.word}: ${d.time.toFixed(0)}ms</span>
+              `)
+            tt.style("visibility", "visible")
+        })
+        .on("mouseout", function(event, d) {
+          d3.select(this).transition().duration(100).style("opacity", 1)
+          tt.style("visibility", "hidden")
+        })
   g.selectAll("text").data(entries).enter()
       .append("text")
         .text((d) => d.time)
         .attr("y", (d) => y(d.word)+y.bandwidth()-1)
         .style("fill", "white")
         .style("font-size", y.bandwidth()+"px")
+        .style("pointer-events", "none")
 
       g.selectAll("rect").data(entries)
       .attr("fill", (d) => d3.hsl(20, 0.75, d.freq === "high" ? 0.6 : 0.4).formatHex())
@@ -97,12 +120,13 @@ func BifurcatedFrequencyHistogram(db *pgxpool.Pool) templ.Component {
 }
 
 templ displayHistogram(entries []entry) {
-	@graphBase(
-		"Word Time By Frequency",
-		`On the left are words with a low frequency in english, 
-													      on the right are those with a higher frequency
-													    `,
-		svgComponent("0 0 400 700", "freqHisto"),
-	)
-	@listEntries(entries, "freqHisto")
+	<div id="fig6">
+		@graphBase(
+			"Figure 6",
+			`On the left are words with a low frequency in english,
+									    on the right are those with a higher frequency.`,
+			svgComponent("0 0 800 1200", "freqHisto"),
+		)
+		@listEntries(entries, "freqHisto")
+	</div>
 }

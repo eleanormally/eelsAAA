@@ -1,0 +1,5 @@
+<div id=\"fig2\">
+</div>
+<span>Error Generating Graph</span>
+<style>\n      .tick {\n        font-weight: bold;\n        font-size: 2em;\n      }\n      .bar {\n        fill: #99ccff;\n        cursor: default;\n      }\n      .err {\n        stroke: black; \n        pointer-events: none;\n      }\n    </style> 
+ 

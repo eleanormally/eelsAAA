@@ -1,27 +1,374 @@
 package views
 
 import (
+	"fmt"
+	"os"
 	"net/http"
+	"eelsAAA/graphs"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func Writeup(w http.ResponseWriter) {
-	view().Render(context.Background(), w)
+func Writeup(w http.ResponseWriter, db *pgxpool.Pool) {
+	view(db).Render(context.Background(), w)
 
 }
 
-templ view() {
+templ view(db *pgxpool.Pool) {
 	<html>
 		<head>
 			<title>eelsAAA Writeup</title>
 			<script src="https://cdn.tailwindcss.com"></script>
 			<script src="https://code.jquery.com/jquery-3.7.1.slim.min.js" integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
+			<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+			<script>
+        function toggle(item) {
+          let i = item.querySelector('.source-content');
+          i.style.visibility = i.style.visibility == "hidden" ? "visible" : "hidden";
+          j = $(i)
+          if(j.width()+j.offset().left > $(window).width()-100) {
+            i.style.left = null;
+            i.style.right = "15px";
+          }
+          if(j.offset().top+j.height() < 200) {
+            i.style.top = "15px";
+            i.style.bottom = null;
+          }
+        }
+      </script>
 		</head>
-		<body>
-			<div class="flex flex-col items-center justify-center w-full h-full">
-				<p>
-					Temp
-				</p>
+		<body class="bg-gray-100">
+			<div class="flex w-full">
+				<div class="w-1/4">
+					<div class="m-3 mt-16 p-2 bg-white rounded-md shadow-md grid grid-cols-1 gap-2 sticky top-8">
+						<a class="text-blue-400 underline cursor-pointer" href="#abstract">Abstract</a>
+						<a class="text-blue-400 underline cursor-pointer" href="#litrev">Background and Literature Review</a>
+						<a class="text-blue-400 underline cursor-pointer" href="#questions">Research Questions</a>
+						<a class="text-blue-400 underline cursor-pointer" href="#experiment">Experiment</a>
+						<a class="text-blue-400 underline cursor-pointer" href="#results">Results</a>
+						<a class="text-blue-400 underline cursor-pointer" href="#discussion">Discussion</a>
+						<a class="text-blue-400 underline cursor-pointer" href="#references">References</a>
+					</div>
+				</div>
+				<div class="flex flex-col w-full">
+					<div class="flex flex-col bg-white shadow-md p-3 w-full mx-3 mt-3 rounded-md">
+						@section("Abstract", "abstract", abstract())
+						@section("Background and Literature Review", "litrev", review())
+						@section("Research Questions", "questions", questions())
+						@section("Experiment", "experiment", experiment())
+						@section("Results", "results", results(db))
+						@section("Discussion", "discussion", discussion())
+					</div>
+					<div class="flex flex-col bg-white shadow-md p-3 w-full mx-3 mt-3 rounded-md" id="references">
+						<h1 class="font-sans text-2xl py-2">References</h1>
+						for i, c := range sources() {
+							<div class="flex items-baseline">
+								{ fmt.Sprint(i+1) }: 
+								@c
+							</div>
+						}
+					</div>
+				</div>
+				<div class="w-3 lg:w-1/3"></div>
 			</div>
 		</body>
 	</html>
+}
+
+templ section(name string, id string, content templ.Component) {
+	<style>
+    p {
+      padding-bottom: 2em;
+    }
+    h2 {
+      font-style: bold;
+      padding-bottom: 1em;
+    }
+    @media (min-width: 1024px) {
+      p {
+        font-size: 20px;
+        line-height: 35px;
+      }
+    }
+  </style>
+	<div id={ id }>
+		<h1 class="font-sans text-2xl py-2">{ name }</h1>
+		<div class="font-serif text-base">
+			@content
+		</div>
+	</div>
+}
+
+templ empty() {
+}
+
+templ abstract() {
+	<p>
+		When developing theories of how the brain processes words, we look to create categories of words to see how their processing differs. 
+		Two natural categories are those of Age of Acquisition and frequency.
+		This experiment, based on work by Gerhand and Barry
+		@source("1")
+		, tested response times in a lexical decision task and their relationship between both AoA (Age of Acquisition) and frequency.
+		We were able to successfully replicate the findings of that previous work; however, modern analysis of the categorization of words by their frequency and AoA has necessitated discussion on the usefulness of these results. 
+	</p>
+}
+
+templ review() {
+	<p>Before looking at Age of Acquisition and frequency's effects on lexical analysis, let us look at general theories around lexical access. The most common theory, and the one that many more specific theories are based on, is the Dual Route Model. In this model, the brain has 2 separate pathways to understand a word. The first is the lexical, or direct, route. When using the lexical route, the brain directly associates the shapes and combinations of letters and a specific meaning in the brain. This works in a similar manner to other forms of object detection: in the same way one can look at an apple and know what it is, so too can they look at the word "apple". The other route is know as the graphonological, or indirect, route. In this route, the reader sounds out the word (either in silently or aloud), and then connects the meaning to that sound. </p>
+	<p>
+		While this serves as a starting ground for understanding how humans process words, there are a number of theories that build on this base model. For instance, Grainger and Ziegler
+		@source("2")
+		&nbsp;
+		propose a set of coarse and grain "chunking" methods to break down words into components. These components can then be analyzed graphically, be sounded out, or a mixture of the two through the more traditional dual route model.
+	</p>
+	<p>
+		The effect of frequency and AoA (Age of Acquisition) of words is an active area of research, with a range of competing theories and claims about the extent of their affects. 
+		Some researchers (see Zevin & Seidenberg, 2002
+		@source("3")
+		&#41; dispute that AoA effects are anything more than side effects of other factors. One of the reasons that some believe that AoA does not have an effect on experiments such as Lexical Decision tasks is that it is thought to be an indirect measurement of word frequency. Words that are more commonly used are more likely to be learnt earlier in life, and they argue that when accounting for this correlation AoA effects are not seen.
+	</p>
+	<p>This argument, however, has been heavily called into question. In experiments which preemptively account for both AoA and frequency, AoA effects are still seen, and in fact in many cases seen more strongly than frequency effects.</p>
+	<p>
+		One of the other reasons that AoA may be thought of as a secondary factor in lexical processing is that it's effect differs 
+		drastically between tasks. In general, Picture naming tasks tend to have the highest AoA effects, 
+		where as word naming tasks have very little effect.
+		@source("4")
+		&nbsp;
+		Lexical decision tasks, like the one performed here, seem to have a AoA effect, but not as strongly as in picture naming tasks.
+	</p>
+	<p>
+		In a review by Barbara J. Juhasz
+		@source("4")
+		, she identified 6 distinct theories explaining the effect of AoA on lexical processing. 
+		Some of this, like the Bilateral Representation Hypothesis, have been discounted in recent years, and others, 
+		like Phonological Completeness and Lexical-Semantic Competition Hypotheses, focus on explaining picture naming tasks rather than lexical decision tasks. The theories that best explain the effects seen in lexical decision tasks are the Semantic Locus Hypothesis and the Network Plasticity Hypothesis.
+	</p>
+	<p>
+		The Semantic Locus Hypothesis is based on previous research and theories on how humans learn the meaning of words throughout 
+		their life. When young, a speaker learns new words as their base concept, as they have a limited vocabulary to use to describe
+		that word. For instance, one may learn the word "ball" and directly associate it with the concept of a ball. However, 
+		words learnt later in life will be remembered through their connections to already known words (that same speaker may learn the 
+		word "sphere", and connect it back to ball rather than the base concept of a sphere). This method of learning words would be slower,
+		as understanding the semantics of a word is more difficult when navigating through its connections to other words instead of a 
+		direct connection to a concept. This theory suggests that tasks that require semantics are more likely to show an AoA effect. 
+		This does hold true in research, as picture naming tasks require more semantic understanding than lexical decision tasks, 
+		and as such show a strong AoA effect. This does imply that a lexical decision task requires semantic comprehension, 
+		which is supported by Perea and Rosa's
+		@source("5")
+		&nbsp;
+		research showing that semantic priming has a significant effect on lexical decision tasks.
+	</p>
+	<p>The Network Plasticity Hypothesis is similar to the Semantic Locus Hypothesis, in that they both are based on changes in the brain's way of learning as it ages. This theory suggests that when words are learnt at an early age, the brain can more strongly create new and unique patterns to represent them. When words are learnt at a later age, however, the new patterns are weaker, and often rely on existing patterns of other words. In the Network Plasticity Hypothesis, however, this difficulty is detached from the semantic understanding of words. Additionally, this hypothesis is largely based on simulated studies of artificial neural networks, rather than human trials.</p>
+	<p>Due to the related nature of AoA and frequency, many of these modern theories are moving towards the idea that frequency may be a side effect of AoA, rather than the other way around. There are also theories that both correlated and independent effects are present, but this continues to be an area of active research. Additionally, systematically evaluating this differences has proved difficult, due to the ambiguity in the scale of frequency and AoA. There is no easy way to map "early" vs "late" Age of Acquisition to "low" and "high" frequency words. When researching AoA effects, researchers did propose a statistical technique using the z score between the two categories of both. This method, however, is imperfect, and is quite novel, meaning minimal research has used it to equate the two.</p>
+}
+
+templ questions() {
+	<p>
+		With this understanding of the theories surrounding AoA and frequency's effect on lexical tasks, and the background of previous studies, this experiment aims to add to the corpus of data on their effects.
+	</p>
+	<p>
+		Specifically, this experiment aims to replicate and verify the results of Gerhand & Barry
+		@source("1")
+		, and look at the correlations between the Age of Acquisition (AoA) and frequency of words in English and the time taken to identify them as existing words.  
+	</p>
+	<p>As per that original study, we expected that frequency would be the primary contributor to response times, and that AoA would play a smaller role, appearing primarily as a determiner in low frequency words.</p>
+}
+
+templ experiment() {
+	<p>
+		To study the effects of word frequency and average age of acquisition (AoA) on lexical access times,
+		we designed a published a website for participants to self test. 
+		These tests were taken over the course of a month, and were designed to largely replicate the tests performed in Gerhand & Barry.
+		@source("1")
+	</p>
+	<h2 class="font-sans text-xl">Participants</h2>
+	<p>In Total, over 50 people participated in the trials, but only 43 completed the tests. Of these completed test, 1 result was discounted for excess time. Any result over 10 seconds was discounted as a distraction. The primary L1 of participants was English (40/43 participants), with 1 L1 speaker each of: Chinese (Mandarin), Spanish, and Telugu. All participants were, however, fluent in english.</p>
+	<p>
+		Participants were mostly college age students, with a median age of 20. There were, however, four participants over the age of 30, and one participant under 18. 
+		Participants were both left and right handed, and were not asked their handedness before beginning. Participants were not asked about their vision.
+		All participation in the trials was volunteer, and no incentives were given.
+	</p>
+	<h2 class="font-sans text-xl">Methods</h2>
+	<p>Before beginning the testing, all participants were asked for their name, age, and first language. Names were recorded to avoid any duplicate entries by people taking the test multiple times, and are not included in any publicly available data.</p>
+	<p>After entering their information, participants were prompted with a screen explaining how to take the test. They were told to rest their fingers on the "f" and "j" keys of the keyboard (the left and right centering keys on the standard QWERTY keyboard). They were told that they would see a series of words on the screen, and to press the "f" or "j" key if a word was a real word in English, and the other if it was not. Whether the "word" option was on "f" or "j" was randomized between participants. Word vs. non-word cues were included throughout testing above the keys on the screen, as shown in (FIGURE N)</p>
+	<p>
+		Participants were then shown a series of potential words and asked to identify whether or not they were true words in English. 
+		Participants were shown 64 potential words, in addition to 10 "warm up" potential words. 
+		These first 10 were the same for all participants, but the 64 test words were randomized and randomly picked from the 
+		total 100 potential word pairs, which will be discussed further in <a href="#stimuli" class="underline">Stimuli</a>.
+		Of the 64 test words, they were split up into 8 different groups. 
+		Each participant saw 16 total words from the following categories:
+		<ul class="ml-5">
+			<li>High Frequency, Early Age of Acquisition</li>
+			<li>High Frequency, Early Age of Acquisition</li>
+			<li>Low Frequency, Late Age of Acquisition</li>
+			<li>Low Frequency, Late Age of Acquisition</li>
+		</ul>
+	</p>
+	<p>
+		Of these, 8 of each were true words, and 8 were non-words designed to emulate the phonotactics of their corresponding real word. All of these test words were randomized per participant. 
+		After pressing either "f" or "j", the time taken after seeing the word was recorded, along with which word it was, and whether or not they chose correctly. 
+	</p>
+	<h2 class="font-sans text-xl" id="stimuli">Stimuli (Word Choice)</h2>
+	<p>Each potential word shown to participants was part of a word non-word pair. The nonword in the pair was created by modifying one or more letters of the true word, while still obeying English orthographic rules and phonotactics. In total there were 100 test pairs. </p>
+	<p>
+		Of these 100 test pairs, 64 were from Gerhand & Barry
+		@source("1")
+		, and the other 36 were written by Eleanor Olson. Of those not from the Gerhand & Barry, words were segregated into frequencies and average AoA with analysis by Kuperman, Stadthagen-Gonzales, and Brysbaert.
+		@source("6")
+		&nbsp;
+		Words with an average AoA over 10 were said to be learnt late, and those with an AoA under 5 were said to be early. Words with a frequency over 150 occurrences per million words were said to be high frequency, and those with less than 2 occurrences per million were classified as low frequency. In total, there were 22 high frequency late AoA, 26 low frequency late AoA, 26 high frequency early AoA, and 26 low frequency early AoA word pairs. There less high frequency and late AoA pairs, as words that are very frequent are much more likely to be learnt at a younger age. Since, however, each participant was always shown the same number of each category, this imbalance does not skew results.
+	</p>
+}
+
+templ results(db *pgxpool.Pool) {
+	<h2 class="font-sans text-xl">Word Identification Accuracy</h2>
+	<p>
+		Overall, participants were incredibly accurate at distinguishing word from non words, 
+		and this aligns with numerous studies on this skill. 
+		Participants were slightly more likely to misidentify a word as a non word, with a mean word identification accuracy of 92.3% and non word accuracy of 96.6%, 
+		with respective standard errors of 0.7% and 0.5%,
+		as seen in <a href="#fig1" class="underline">figure 1</a>.
+	</p>
+	<p>
+		The relationship between word status 
+		(whether or not a word was a real English word) and accuracy was analyzed with a logistic regression model. 
+		There was a significant effect by word status on response accuracy (z = 4.747, p &lt; 0.001).
+	</p>
+	<p>When broken down by frequency and AoA, as in <a href="#fig2" class="underline">figure 2</a>, we see that there are similar differences in accuracy. When measuring response accuracy based on frequency and AoA, corresponding non words were ignored, and only the true words were used. The highest response accuracy occurred in early AoA low frequency words, with 100% accuracy, and the lowest accuracy in late AoA low frequency words, with a 90.7% accuracy and a 1.6% standard deviation. </p>
+	<div class="w-full flex justify-center">
+		<div class="w-3/4 mb-4 grid grid-cols-2 gap-4">
+			@graphs.ResponseAccuracyBar(db)
+			@graphs.ResponseAccuracyAoAFreqBar(db)
+		</div>
+	</div>
+	<p>
+		The relationship between AoA + frequency and response accuracy was also analyzed with a logistic regression model. 
+		This model showed that there was no significant effect of both AoA and frequency, nor their interaction (although their interaction trended towards significance). 
+		These relationships can be seen in <a href="#fig3" class="underline">figure 3</a>
+		<div class="w-full flex justify-center flex-col flex-shrink">
+			<span class="text-lg text-center">Figure 3</span>
+			<div class="flex justify-center">
+				<table class="border-separate p-2 shadow-md rounded-lg bg-gray-50 border-spacing-3" id="fig3">
+					<tr>
+						<td></td>
+						<td>Z Value</td>
+						<td>P Value</td>
+					</tr>
+					<tr>
+						<td>AoA (late)</td>
+						<td>-0.249</td>
+						<td>0.803</td>
+					</tr>
+					<tr>
+						<td>Frequency (low)</td>
+						<td>0.655</td>
+						<td>0.513</td>
+					</tr>
+					<tr>
+						<td>AoA + Frequency</td>
+						<td>-1.841</td>
+						<td>0.0657</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</p>
+	<h2 class="font-sans text-xl">Word Identification Response Times</h2>
+	<p>
+		In addition to being slightly more accurate at identifying nonwords, participants also tended to take more time. 
+		As shown in <a href="#fig4" class="underline">figure 4</a>, the mean identification time for words was 836ms, with a standard deviation of 478ms, and the mean time to identify nonwords was 1146ms, with a standard deviation of 796ms. These response times varied significantly, which was expected due to the natural variations in human reaction times. More information can be seen by hovering over (the figure).
+	</p>
+	<p>
+		The relationship between word status and response time was analyzed with a linear regression model, and found a significant effect (z = -12.74, p &lt; 0.001) between the two. 
+	</p>
+	<p>
+		When categorizing by frequency and AoA, as in <a href="#fig5" class="underline">figure 5</a>, 
+		we again see a pairing of higher response accuracy with longer average response times. 
+		The highest mean identification time occurred in infrequent late AoA words, with a mean of 981ms, 
+		and the lowest mean identification time was in frequent late AoA words, with a mean of 764ms. 
+	</p>
+	<div class="w-full flex justify-center">
+		<div class="mb-4 grid grid-cols-3 gap-4">
+			@graphs.ResponseTimeBox(db)
+			@graphs.ResponseTimeAoAFreqBox(db)
+			@graphs.BifurcatedFrequencyHistogram(db)
+		</div>
+	</div>
+	<p>The relationship between AoA, frequency, and response time was also analyzed with a linear regression model. It did not find a significant effect between either of them on their own and response time (AoA: z = -0.724, 0.469, frequency: z = -0.152, p = 0.8791); however, when combined they did have a statistically significant effect on response time (z = 2.493, p = 0.0127, F(1,2684) = 6.213). There was a higher effect of AoA on response time for low frequency words than higher frequency words.</p>
+	<p>While not part of the originally planned analysis, one other result found was in the correlation between response accuracy and response time. When analyzed with a linear model, a significant effect was found (z = -3.92, p &lt; 0.01). However, no significant effect was found when correlating accuracy with any other metrics.</p>
+	<p><a href="#fig6" class="underline">Figure 6</a> shows a complete list of the tested words and their mean response times. In addition to the statistical analysis, this histogram visually shows the relationship between frequency and response time.</p>
+}
+
+templ resultDiagrams(db *pgxpool.Pool) {
+	<div class="grid grid-cols-2 gap-4 mb-4">
+		@graphs.ResponseAccuracyBar(db)
+		@graphs.ResponseAccuracyAoAFreqBar(db)
+	</div>
+	<div class="grid grid-cols-2 gap-4 mb-4">
+		@graphs.ResponseTimeBox(db)
+		@graphs.ResponseTimeAoAFreqBox(db)
+	</div>
+	<div class="grid grid-cols-2 gap-4">
+		@graphs.BifurcatedFrequencyHistogram(db)
+	</div>
+}
+
+templ discussion() {
+	<p>
+		These results matched the predictions outlined by Gerhand & Barry.
+		@source("1")
+		&nbsp;
+		While we were not able to significantly show that frequency was a predictor of reaction time on its own, we did show that it was a predictor when accounting to AoA as well. Additionally, we showed that there was a more prominent effect from AoA in low frequency words.
+	</p>
+	<p>This analysis was based on the analysis done by Gerhand & Barry, and as such it is unsurprising that it aligns with their results. If word selection for AoA and frequency was guided by more modern techniques as outlined in the various theories of AoA's effect on lexical tasks, we may have seen results that more aligned to those theories. </p>
+	<p>
+		While our analysis does align with the results in previous studies, there are a number of limitations in our data that should be considered. 
+		All participants took the tests on their own computers at their own discretion, and as such many outside variables could not be avoided. 
+		While only 1 test was discarded due to extended delay, it is not possible to tell whether there were other stimuli during testing that affected results. 
+		Additionally, participants were primarily from a similar cohort, meaning that these results may not hold true in the wider population. 
+		This is a particularly important note, as some studies
+		@source("7")
+		@source("4")
+		&nbsp;
+		have found frequency effects present in young adult populations, but not in older adults. Since, however, our results matched those found by numerous studies, they add to the body of tests suggesting the findings presented, and help to solidify the conclusions drawn by others.
+	</p>
+	<p>Although there is a plethora of data analyzing a number of lexical processing tasks and their relationship to both frequency and Age of Acquisition, there remain a number of competing theories. In fact, there are a number of researchers who still believe that AoA and frequency are simply multiple manifestations of the same property. While more research on new data is useful, we have a number of more modern techniques to partition words by characteristics like frequency and AoA. With these techniques, we may find more information in reevaluation of the existing data from the numerous studies over the year, and comparing their findings with consistent categorization and analysis.</p>
+}
+
+func source(num string) templ.Component {
+	d, err := os.ReadFile("references/" + num + ".txt")
+	if err != nil {
+		return sourceView(num, "Error loading citation.:"+err.Error())
+	}
+	return sourceView(num, string(d))
+}
+
+templ sourceView(num string, content string) {
+	<sup class="relative inline-block text-blue-600 cursor-pointer" onclick="toggle(this)">
+		<span class="select-none">
+			{ fmt.Sprintf("[%s]", num) }
+		</span>
+		<span style="visibility:hidden; left:15px; bottom:15px " class="source-content absolute text-black text-sm bg-gray-50 border-1 p-2 shadow-sm rounded-md max-w-80">{ content }</span>
+	</sup>
+}
+
+func sources() []templ.Component {
+	arr := []templ.Component{}
+	for i := 1; i <= 7; i++ {
+		arr = append(arr, citation(fmt.Sprint(i)))
+	}
+	return arr
+
+}
+
+func citation(num string) templ.Component {
+	d, err := os.ReadFile("references/" + num + ".txt")
+	if err != nil {
+		return citationView("Error loading citation:" + err.Error())
+	}
+	return citationView(string(d))
+}
+
+templ citationView(content string) {
+	<span class="p-3">{ content }</span>
 }
