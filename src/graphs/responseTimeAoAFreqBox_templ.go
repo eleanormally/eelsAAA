@@ -33,7 +33,7 @@ func ResponseTimeAoAFreqBox(db *pgxpool.Pool) templ.Component {
 		}
 		templ_7745c5c3_Err = graphBase(
 			"Figure 5",
-			"",
+			"Blue box surrounds the center 2 quartiles. Whiskers surround the 5th and 9th percentiles. All data the falls outside of this is plotted",
 			displayResponseTimeAoAFreqBox(getResponseTimeAoAFreqData(db)),
 		).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {

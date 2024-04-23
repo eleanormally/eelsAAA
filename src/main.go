@@ -51,6 +51,18 @@ func main() {
 		views.Playground(w, db)
 	})
 
+	http.HandleFunc("/img", func(w http.ResponseWriter, r *http.Request) {
+		fileBytes, err := os.ReadFile("data/img.png")
+		if err != nil {
+			panic(err)
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Write(fileBytes)
+		return
+
+	})
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
